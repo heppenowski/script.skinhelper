@@ -1,14 +1,8 @@
 import sys
 import xbmcvfs
-from PIL import Image, ImageDraw
+from PIL import Image
 
 SKIN_PATH = 'special://skin'
-
-
-def interpolate(f_co, t_co, interval):
-    det_co = [(t - f) / interval for f, t in zip(f_co, t_co)]
-    for i in range(interval):
-        yield [round(f + det * i) for f, det in zip(f_co, det_co)]
 
 
 def hex_to_rgb(h):
@@ -34,6 +28,8 @@ class Main:
                 self.generate_monochrome()
 
     def generate_gradient(self):
+        """Generate a gradient from the two RGB given"""
+
         c1, c2 = None, None
         for h in self.handle:
             if 'highlight' in h:
@@ -41,15 +37,25 @@ class Main:
             if 'gradient' in h:
                 c2 = h.split('=')[1][2:]
 
-        imgsize = (64, 64)
-        gradient = Image.new('RGBA', imgsize, color=0)
-        draw = ImageDraw.Draw(gradient)
+        imgsize = (128, 32)
 
-        f_co = hex_to_rgb(c1)
-        t_co = hex_to_rgb(c2)
-        for i, color in enumerate(interpolate(f_co, t_co, gradient.width)):
-            draw.line([(i, 0), (i, gradient.height)], tuple(color), width=1)
-        gradient.save(self.gradient_path, 'png')
+        f_co = list(map(int, hex_to_rgb(c1)))
+        t_co = list(map(int, hex_to_rgb(c2)))
+
+        r_gap = (t_co[0] - f_co[0]) / imgsize[0]
+        g_gap = (t_co[1] - f_co[1]) / imgsize[0]
+        b_gap = (t_co[2] - f_co[2]) / imgsize[0]
+
+        im = Image.new("RGB", imgsize)
+
+        for x in range(imgsize[0]):
+            column_color = (int(f_co[0] + r_gap * x),
+                            int(f_co[1] + g_gap * x),
+                            int(f_co[2] + b_gap * x))
+            for y in range(imgsize[1]):
+                im.putpixel((x, y), column_color)
+
+        im.save(self.gradient_path)
 
     def generate_monochrome(self):
         c1 = None
