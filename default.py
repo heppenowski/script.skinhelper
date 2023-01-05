@@ -23,9 +23,15 @@ class Main:
 
         for h in self.handle:
             if h == 'gradient=true':
-                self.generate_gradient()
+                try:
+                    self.generate_gradient()
+                except Exception:
+                    pass
             if h == 'monochrome=true':
-                self.generate_monochrome()
+                try:
+                    self.generate_monochrome()
+                except Exception:
+                    pass
 
     def generate_gradient(self):
         """Generate a gradient from the two RGB given"""
